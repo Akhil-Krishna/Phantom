@@ -15,3 +15,6 @@ This app is intended to be made as both website form and also as an executable f
 4. flask
 5. Mediapipe (modal provided by google)
 
+# Images
+Required images are BarUp.png (Header part along with logo) , BarSide.png (along with tools)
+
