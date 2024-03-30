@@ -34,6 +34,7 @@ Tags
 v1.0.0 - Basic tools
 v1.1.0 - added white canvas
 v1.2.0 - added clearAll and sideBar
+v1.3.0 - adding other tools
 
 
 """
@@ -79,13 +80,20 @@ mp_draw=mp.solutions.drawing_utils
 
 #tools
 drawColor=(0,0,255)
+
+# for displaying on screen
 selectedColor='Blue'
 selectedTool='Draw'
-tool="Draw"
+
+tool="Draw"  #important for selection
+
 xp,yp=0,0           #previous position of index finger
 
 
 
+# variable for drawing circle
+var_inits=False
+circleDrawn=False
 
 
 
@@ -164,6 +172,7 @@ while cap.isOpened():
         # 4. Selection Mode=================================================================================
         if fingerList[1] and fingerList[2]:
 
+
             #to make discontinuity after selection
             xp,yp=0,0
 
@@ -176,6 +185,7 @@ while cap.isOpened():
                 #Red Color
                 if 342 < xm < 480:
                     drawColor = (0, 0, 255)
+
                     selectedColor = "Red"
 
                 #Blue Color
@@ -194,6 +204,7 @@ while cap.isOpened():
                     drawColor = (0, 0, 0)
                     selectedColor = "none"
                     selectedTool='Eraser'
+                    tool="Eraser"
             
             #side tool selection
             if xm>1220:
@@ -202,11 +213,14 @@ while cap.isOpened():
                     canvasBlack = np.zeros((720, 1280, 3), np.uint8)
                     canvas[:, :, :] = 255
                 elif 192<ym<294:
-                    print("Draw tool")
+                    #print("Draw tool")
+                    tool="Draw"
                 elif 320<ym<408:
-                    print("Circle tool")
+                    #print("Circle tool")
+                    tool="Circle"
                 elif 440<ym<550:
-                    print("Rectangle")
+                    #print("Rectangle")
+                    tool="Rectangle"
 
 
 
@@ -215,9 +229,28 @@ while cap.isOpened():
 
         #5. Drawing Mode==================================================================================
         if fingerList[1] and fingerList[2]==0:
+
             #print("Drawing Mode")
 
             cv2.circle(img,(xi,yi),15,drawColor,-1)
+
+            if tool=="Eraser":
+                #when frame start dont make a line from 0,0 so draw a line from xi,yi to xi,yi ie a point
+                if xp==0 and yp==0:
+                    xp,yp=xi,yi
+
+                #it is to automatically make drawing back to normal size
+                if drawColor==(0,0,0):
+                    cv2.line(img, (xp, yp), (xi, yi), drawColor, 70)
+                    cv2.line(canvas, (xp, yp), (xi, yi), (255,255,255), 70)
+                    cv2.line(canvasBlack, (xp, yp), (xi, yi), drawColor, 70)
+                else:
+                    cv2.line(img, (xp, yp), (xi, yi), drawColor, 10)
+                    cv2.line(canvas, (xp, yp), (xi, yi), drawColor, 10)
+                    cv2.line(canvasBlack, (xp, yp), (xi, yi), drawColor, 10)
+                #update xp and yp
+                xp,yp=xi,yi
+
 
             #Drawing
             if tool=="Draw":
@@ -225,18 +258,33 @@ while cap.isOpened():
                 if xp==0 and yp==0:
                     xp,yp=xi,yi
 
-                #making eraser a bit wider ie thickness
-                if drawColor==(0,0,0):
-
-                    cv2.line(img, (xp, yp), (xi, yi), drawColor, 70)
-                    cv2.line(canvas, (xp, yp), (xi, yi), (255,255,255), 70)
-                    cv2.line(canvasBlack, (xp, yp), (xi, yi), drawColor, 70)
-                else:
+                # it is to automatically make eraser back to normal size
+                if drawColor!=(0,0,0):
                     cv2.line(img,(xp,yp),(xi,yi),drawColor,10)
                     cv2.line(canvas,(xp,yp),(xi,yi),drawColor,10)
                     cv2.line(canvasBlack, (xp, yp), (xi, yi), drawColor, 10)
+                else:
+                    cv2.line(img, (xp, yp), (xi, yi), drawColor, 70)
+                    cv2.line(canvas, (xp, yp), (xi, yi), (255,255,255), 70)
+                    cv2.line(canvasBlack, (xp, yp), (xi, yi), drawColor, 70)
                 #update xp and yp
                 xp,yp=xi,yi
+
+            elif tool=="Circle":
+
+                if fingerList[1] and fingerList[4]==0:
+                    if not (var_inits):
+                        xii, yii = xi, yi
+                        var_inits = True
+
+                    cv2.circle(img, (xii, yii), int(((xii - xi) ** 2 + (yii - yi) ** 2) ** 0.5), drawColor, 10)
+                else:
+                    if fingerList[4]==1:
+                        cv2.circle(canvasBlack, (xii, yii), int(((xii - xi) ** 2 + (yii - yi) ** 2) ** 0.5), drawColor, 10)
+                        cv2.circle(canvas, (xii, yii), int(((xii - xi) ** 2 + (yii - yi) ** 2) ** 0.5),drawColor, 10)
+                        var_inits = False
+
+
 
 
 
