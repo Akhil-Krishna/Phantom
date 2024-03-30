@@ -42,6 +42,7 @@ while cap.isOpened():
     if success:
         cv2.imshow("handTracker",img)
 
+    # Esc to quit the app
     if cv2.waitKey(1)==27:
         break
 
