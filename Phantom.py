@@ -6,6 +6,8 @@ White board available to send notes
 
 important areas of code
 
+Line number may change
+
 30  : importing modules
 36  : video capture object
 43  : Whiteboard
@@ -31,6 +33,7 @@ Tags
 
 v1.0.0 - Basic tools
 v1.1.0 - added white canvas
+v1.2.0 - added clearAll and sideBar
 
 
 """
@@ -59,6 +62,9 @@ canvasBlack=np.zeros((720,1280,3),np.uint8)
 
 #header bar image
 overlay=cv2.imread("images/BarUp.png")[0:80,0:1280]
+
+#SideBar image
+sidebar=cv2.imread("images/BarSide.png")[80:720,1200:1280]
 
 
 
@@ -155,7 +161,7 @@ while cap.isOpened():
 
 
 
-        # 4. Selection Mode
+        # 4. Selection Mode=================================================================================
         if fingerList[1] and fingerList[2]:
 
             #to make discontinuity after selection
@@ -188,11 +194,26 @@ while cap.isOpened():
                     drawColor = (0, 0, 0)
                     selectedColor = "none"
                     selectedTool='Eraser'
+            
+            #side tool selection
+            if xm>1220:
+                if 81<ym<167:
+                    #print("Clear all")
+                    canvasBlack = np.zeros((720, 1280, 3), np.uint8)
+                    canvas[:, :, :] = 255
+                elif 192<ym<294:
+                    print("Draw tool")
+                elif 320<ym<408:
+                    print("Circle tool")
+                elif 440<ym<550:
+                    print("Rectangle")
 
 
 
 
-        #5. Drawing Mode
+
+
+        #5. Drawing Mode==================================================================================
         if fingerList[1] and fingerList[2]==0:
             #print("Drawing Mode")
 
@@ -218,6 +239,7 @@ while cap.isOpened():
                 xp,yp=xi,yi
 
 
+
     #6 . Adding canvas and real fram
 
 
@@ -232,8 +254,9 @@ while cap.isOpened():
     #img = cv2.addWeighted(img, 0.5, canvas, 0.5, 0)
 
 
-    #trying to overlay header to webcam
+    #trying to overlay header , sidebar to webcam
     img[0:80,0:1280]=overlay
+    img[80:720,1200:1280]=sidebar
 
 
 
