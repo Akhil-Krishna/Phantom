@@ -7,6 +7,10 @@ so from now on words there is not a need of whiteboards or blackboards
 
 This app is intended to be made as both website form and also as an executable file for windows so the range of users can be increased
 
+# Working
+use middle and index finger to select a tool
+use index finger draw
+
 # Requirements
 
 1. Python 3.7 or above
