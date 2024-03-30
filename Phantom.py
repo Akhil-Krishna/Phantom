@@ -1,4 +1,39 @@
+'''
+Phantom- A Virtual Board
+Developed by Dr.Akhil Krishna
 
+White board available to send notes
+
+important areas of code
+
+30  : importing modules
+36  : video capture object
+43  : Whiteboard
+54  : Header image
+57  : Mediapipe object creation
+65  : tools and gloabal variables
+79  : fingerUp function
+110 : while loop
+117 : Hand tracking module
+149 : Selection mode
+185 : Drawing mode
+211 : Merging Frame with Canvas
+233 : Exiting condition
+
+
+Requirements
+    BarUp.png,Mediapipe,numpy,opencv
+
+'''
+
+"""
+Tags 
+
+v1.0.0 - Basic tools
+v1.1.0 - added white canvas
+
+
+"""
 #importing necessary libraries
 import cv2
 import mediapipe as mp
@@ -14,6 +49,7 @@ cap.set(10,150) #brightness=150%
 
 #Canvas
 canvas=np.zeros((720,1280,3),np.uint8)
+canvas[:,:,:]=255
 # Black Canvas
 canvasBlack=np.zeros((720,1280,3),np.uint8)
 
@@ -24,9 +60,12 @@ canvasBlack=np.zeros((720,1280,3),np.uint8)
 #header bar image
 overlay=cv2.imread("images/BarUp.png")[0:80,0:1280]
 
+
+
+
 #Mediapipe hand object
 mp_hands=mp.solutions.hands
-hands=mp_hands.Hands()    #hands=mp_hands.Hands(min_detection_confidence=0.5,min_tracking_confidence=0.5)
+hands=mp_hands.Hands()  #hands=mp_hands.Hands(min_detection_confidence=0.5,min_tracking_confidence=0.5)
 
 #Mediapipes Drawing tool for connecting hand landmarks
 mp_draw=mp.solutions.drawing_utils
@@ -115,7 +154,8 @@ while cap.isOpened():
 
 
 
-        # 4. Selection Mode ==================================================================
+
+        # 4. Selection Mode
         if fingerList[1] and fingerList[2]:
 
             #to make discontinuity after selection
@@ -150,7 +190,9 @@ while cap.isOpened():
                     selectedTool='Eraser'
 
 
-        #5. Drawing Mode ==============================================================================
+
+
+        #5. Drawing Mode
         if fingerList[1] and fingerList[2]==0:
             #print("Drawing Mode")
 
@@ -166,9 +208,11 @@ while cap.isOpened():
                 if drawColor==(0,0,0):
 
                     cv2.line(img, (xp, yp), (xi, yi), drawColor, 70)
+                    cv2.line(canvas, (xp, yp), (xi, yi), (255,255,255), 70)
                     cv2.line(canvasBlack, (xp, yp), (xi, yi), drawColor, 70)
                 else:
                     cv2.line(img,(xp,yp),(xi,yi),drawColor,10)
+                    cv2.line(canvas,(xp,yp),(xi,yi),drawColor,10)
                     cv2.line(canvasBlack, (xp, yp), (xi, yi), drawColor, 10)
                 #update xp and yp
                 xp,yp=xi,yi
@@ -193,11 +237,12 @@ while cap.isOpened():
 
 
 
+
     #showing frame
+    cv2.imshow("Phantom- White Board",canvas)
     cv2.imshow("Phantom - A Virtual Board",img)
 
-    #exit condition press esc
+    #exit condition by using esc
     if cv2.waitKey(1)==27:
         break
 
-cv2.destroyAllWindows()
