@@ -4,6 +4,9 @@ Developed by Dr.Akhil Krishna
 
 White board available to send notes
 
+NOTE : FOR DRAWING CIRCLE AND RECTANGLE USE INDEX FINGER AND TO STOP DRAWING USE PINKY FINGER UP 
+
+
 important areas of code
 
 Line number may change
@@ -92,10 +95,14 @@ xp,yp=0,0           #previous position of index finger
 
 
 # variable for drawing circle
-var_inits=False
-circleDrawn=False
 
+isDrawindCircle=False
+countCircle=0
 
+# variable for drawing rectangle
+
+isDrawindRectangle=False
+countRectangle=0
 
 #Function for finding how much fingers are up
 tipIds=[8,12,16,20]  # finger tip ids except for thump tip (4)
@@ -271,18 +278,32 @@ while cap.isOpened():
                 xp,yp=xi,yi
 
             elif tool=="Circle":
+                if isDrawindCircle==False and fingerList[4]!=1:
+                    countCircle=1
+                    xstart,ystart=xi,yi
+                if fingerList[4]==0:
+                    cv2.circle(img, (xstart, ystart), int(((xstart - xi) ** 2 + (ystart - yi) ** 2) ** 0.5), drawColor, 10)
+                    xlast,ylast=xi,yi
+                    isDrawindCircle=True
+                if fingerList[4]==1 and countCircle==1:
+                    isDrawindCircle=False
+                    countCircle=0
+                    cv2.circle(canvasBlack, (xstart, ystart), int(((xstart - xlast) ** 2 + (ystart - ylast) ** 2) ** 0.5), drawColor, 10)
+                    cv2.circle(canvas, (xstart, ystart), int(((xstart - xlast) ** 2 + (ystart - ylast) ** 2) ** 0.5),drawColor, 10)
+            elif tool=="Rectangle":
+                if isDrawindRectangle==False and fingerList[4]!=1:
+                    countRectangle=1
+                    xstart_rect,ystart_rect=xi,yi
+                if fingerList[4]==0:
+                    cv2.rectangle(img, (xstart_rect, ystart_rect), (xi,yi), drawColor, 10)
+                    xlast_rect,ylast_rect=xi,yi
+                    isDrawindRectangle=True
+                if fingerList[4]==1 and countRectangle==1:
+                    isDrawindRectangle=False
+                    countRectangle=0
+                    cv2.rectangle(canvasBlack, (xstart_rect, ystart_rect),(xlast_rect,ylast_rect), drawColor, 10)
+                    cv2.rectangle(canvas, (xstart_rect, ystart_rect),(xlast_rect,ylast_rect),drawColor, 10)
 
-                if fingerList[1] and fingerList[4]==0:
-                    if not (var_inits):
-                        xii, yii = xi, yi
-                        var_inits = True
-
-                    cv2.circle(img, (xii, yii), int(((xii - xi) ** 2 + (yii - yi) ** 2) ** 0.5), drawColor, 10)
-                else:
-                    if fingerList[4]==1:
-                        cv2.circle(canvasBlack, (xii, yii), int(((xii - xi) ** 2 + (yii - yi) ** 2) ** 0.5), drawColor, 10)
-                        cv2.circle(canvas, (xii, yii), int(((xii - xi) ** 2 + (yii - yi) ** 2) ** 0.5),drawColor, 10)
-                        var_inits = False
 
 
 
