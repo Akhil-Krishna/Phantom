@@ -1,0 +1,203 @@
+
+#importing necessary libraries
+import cv2
+import mediapipe as mp
+import numpy as np
+
+
+# video capture object created with webcam no 0
+cap=cv2.VideoCapture(0)
+cap.set(3,1280) #width=1280px
+cap.set(4,720)  #height=720px
+cap.set(10,150) #brightness=150%
+
+
+#Canvas
+canvas=np.zeros((720,1280,3),np.uint8)
+# Black Canvas
+canvasBlack=np.zeros((720,1280,3),np.uint8)
+
+
+
+
+
+#header bar image
+overlay=cv2.imread("images/BarUp.png")[0:80,0:1280]
+
+#Mediapipe hand object
+mp_hands=mp.solutions.hands
+hands=mp_hands.Hands()    #hands=mp_hands.Hands(min_detection_confidence=0.5,min_tracking_confidence=0.5)
+
+#Mediapipes Drawing tool for connecting hand landmarks
+mp_draw=mp.solutions.drawing_utils
+
+
+#tools
+drawColor=(0,0,255)
+selectedColor='Blue'
+selectedTool='Draw'
+tool="Draw"
+xp,yp=0,0           #previous position of index finger
+
+
+
+
+
+
+#Function for finding how much fingers are up
+tipIds=[8,12,16,20]  # finger tip ids except for thump tip (4)
+def fingerUp(landmark):
+    fingerList=[]
+    #thump up/down finding is different if thumptip(4) is left to id 3 then up else down ie, x(id4)<x(id3)
+    if landmark[4][1]<landmark[3][1]:
+        fingerList.append(1)                                    # 0-id 1-x 2-y in landmark
+    else:
+        fingerList.append(0)
+
+    #For the rest of fingers if y(id-tip)<y(id-middlepart) then up else down (id-2 bcz middle part of finger)
+    for id in tipIds:
+        if landmark[id][2]<landmark[id-2][2]:
+            fingerList.append(1)
+        else:
+            fingerList.append(0)
+
+    return fingerList
+
+
+
+
+
+#loop
+"""
+Tasks to perform
+1.Import frame with flipping it and overlay it
+2.find hand landmarks by using HandLandmark detector
+3.find the fingers that are opened using FingerUp method
+4.Selection Mode : Index and middle finger
+5.Drawing Mode : Only Index finger
+6.Add canvas and real frame
+"""
+while cap.isOpened():
+    success,img=cap.read()
+
+    #flipping to make correct aligned(1=horizontally)
+    img=cv2.flip(img,1)
+
+
+    # 2. Landmark and position finding
+    imgRGB=cv2.cvtColor(img,cv2.COLOR_BGR2RGB)  # bcz mediapipe prefer RGB as it is trained in RGB
+    results=hands.process(imgRGB)               # Hand Detected
+
+    #IT IS IMPORTANT THAT IT MUST BE PLACED INSIDE LOOP
+    landMark = []   #Landmark list for storing position of each finger                   ERROR 1 CAUSED
+
+
+    #if hand is detected
+    if results.multi_hand_landmarks:
+        lndmrk = results.multi_hand_landmarks[0]
+        mp_draw.draw_landmarks(img, lndmrk, mp_hands.HAND_CONNECTIONS)  # drawing connection not necessary
+
+        for id, lm in enumerate(lndmrk.landmark):
+            height, width, _ = img.shape
+            # this is done because lm.x gives ratio of x position but we need pixel value so multiply by width , same for height
+            x, y = int(lm.x * width), int(lm.y * height)
+            # appending each landmarks id and position as a list to landMark
+            landMark.append([id, x, y])
+
+
+
+        xi,yi=landMark[8][1:]       #index fingers position
+        xm,ym=landMark[12][1:]      #middle fingers position
+       # print(xm,ym)
+
+        #3.opened fingers
+        fingerList=fingerUp(landMark)
+
+
+
+        # 4. Selection Mode ==================================================================
+        if fingerList[1] and fingerList[2]:
+
+            #to make discontinuity after selection
+            xp,yp=0,0
+
+            cv2.rectangle(img,(xi-10,yi-15),(xm+10,ym+20),drawColor,-1)
+
+            #check if finger on header portion   check later y 125 not 80
+            if yi < 85:
+                # check if fingers are in which x position
+
+                #Red Color
+                if 342 < xm < 480:
+                    drawColor = (0, 0, 255)
+                    selectedColor = "Red"
+
+                #Blue Color
+                elif 576 < xm < 720:
+                    drawColor = (255, 100, 0)
+                    selectedColor = "Blue"
+
+                #Green Color
+                elif 810 < xm < 960:
+                    drawColor = (0, 255, 0)
+                    selectedColor = "Green"
+
+
+                #Eraser
+                elif 1020 < xi < 1200:
+                    drawColor = (0, 0, 0)
+                    selectedColor = "none"
+                    selectedTool='Eraser'
+
+
+        #5. Drawing Mode ==============================================================================
+        if fingerList[1] and fingerList[2]==0:
+            #print("Drawing Mode")
+
+            cv2.circle(img,(xi,yi),15,drawColor,-1)
+
+            #Drawing
+            if tool=="Draw":
+                #when frame start dont make a line from 0,0 so draw a line from xi,yi to xi,yi ie a point
+                if xp==0 and yp==0:
+                    xp,yp=xi,yi
+
+                #making eraser a bit wider ie thickness
+                if drawColor==(0,0,0):
+
+                    cv2.line(img, (xp, yp), (xi, yi), drawColor, 70)
+                    cv2.line(canvasBlack, (xp, yp), (xi, yi), drawColor, 70)
+                else:
+                    cv2.line(img,(xp,yp),(xi,yi),drawColor,10)
+                    cv2.line(canvasBlack, (xp, yp), (xi, yi), drawColor, 10)
+                #update xp and yp
+                xp,yp=xi,yi
+
+
+    #6 . Adding canvas and real fram
+
+
+    imgGray=cv2.cvtColor(canvasBlack,cv2.COLOR_BGR2GRAY)
+    _,imgBin=cv2.threshold(imgGray,50,255,cv2.THRESH_BINARY_INV)
+    imgBin=cv2.cvtColor(imgBin,cv2.COLOR_GRAY2BGR)
+    img=cv2.bitwise_and(img,imgBin)
+    img=cv2.bitwise_or(img,canvasBlack)
+
+
+    #or
+    #img = cv2.addWeighted(img, 0.5, canvas, 0.5, 0)
+
+
+    #trying to overlay header to webcam
+    img[0:80,0:1280]=overlay
+
+
+
+    #showing frame
+    cv2.imshow("Phantom - A Virtual Board",img)
+
+    #exit condition press esc
+    if cv2.waitKey(1)==27:
+        break
+
+cv2.destroyAllWindows()
