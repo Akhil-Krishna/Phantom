@@ -4,7 +4,7 @@ Developed by Dr.Akhil Krishna
 
 White board available to send notes
 
-NOTE : FOR DRAWING CIRCLE AND RECTANGLE USE INDEX FINGER AND TO STOP DRAWING USE PINKY FINGER UP 
+
 
 
 important areas of code
@@ -95,14 +95,10 @@ xp,yp=0,0           #previous position of index finger
 
 
 # variable for drawing circle
-
-isDrawindCircle=False
-countCircle=0
+countCircle=1
 
 # variable for drawing rectangle
-
-isDrawindRectangle=False
-countRectangle=0
+countRectangle=1
 
 #Function for finding how much fingers are up
 tipIds=[8,12,16,20]  # finger tip ids except for thump tip (4)
@@ -175,9 +171,31 @@ while cap.isOpened():
 
 
 
-
+        """We are writing circle and rectangle finish beacuse when we draw circle by using index finger and when middle finger
+        up then we must stop the drawing of circle and paste it there for that 
+        when middle up the selection mode on --> so we can finsh circle inside selection 
+        countCircle will count whether a circle finished drawing or not
+        
+        note : only when we draw something on canvasBlack then only permanent so when middle finger up only we are drawing it on canvasBlack
+        
+        //Same for rectangle  
+        """
         # 4. Selection Mode=================================================================================
         if fingerList[1] and fingerList[2]:
+
+            #circle finishing
+            if countCircle==0:
+                cv2.circle(img, (xstart_circle, ystart_circle),int(((xstart_circle - xlast_circle) ** 2 + (ystart_circle - ylast_circle) ** 2) ** 0.5), drawColor, 10)
+                cv2.circle(canvas, (xstart_circle, ystart_circle),int(((xstart_circle - xlast_circle) ** 2 + (ystart_circle - ylast_circle) ** 2) ** 0.5),drawColor, 10)
+                cv2.circle(canvasBlack, (xstart_circle, ystart_circle),int(((xstart_circle - xlast_circle) ** 2 + (ystart_circle - ylast_circle) ** 2) ** 0.5),drawColor, 10)
+                countCircle=1
+
+            #rectangle finishing
+            if countRectangle==0:
+                cv2.rectangle(img, (xstart_rect, ystart_rect), (xlast_rect, ylast_rect), drawColor, 10)
+                cv2.rectangle(canvas, (xstart_rect, ystart_rect), (xlast_rect, ylast_rect), drawColor, 10)
+                cv2.rectangle(canvasBlack, (xstart_rect, ystart_rect), (xlast_rect, ylast_rect), drawColor, 10)
+                countRectangle=1
 
 
             #to make discontinuity after selection
@@ -278,33 +296,17 @@ while cap.isOpened():
                 xp,yp=xi,yi
 
             elif tool=="Circle":
-                if isDrawindCircle==False and fingerList[4]!=1:
-                    countCircle=1
-                    xstart,ystart=xi,yi
-                if fingerList[4]==0:
-                    cv2.circle(img, (xstart, ystart), int(((xstart - xi) ** 2 + (ystart - yi) ** 2) ** 0.5), drawColor, 10)
-                    xlast,ylast=xi,yi
-                    isDrawindCircle=True
-                if fingerList[4]==1 and countCircle==1:
-                    isDrawindCircle=False
+                if countCircle==1:
+                    xstart_circle,ystart_circle=xi,yi
                     countCircle=0
-                    cv2.circle(canvasBlack, (xstart, ystart), int(((xstart - xlast) ** 2 + (ystart - ylast) ** 2) ** 0.5), drawColor, 10)
-                    cv2.circle(canvas, (xstart, ystart), int(((xstart - xlast) ** 2 + (ystart - ylast) ** 2) ** 0.5),drawColor, 10)
-            elif tool=="Rectangle":
-                if isDrawindRectangle==False and fingerList[4]!=1:
-                    countRectangle=1
-                    xstart_rect,ystart_rect=xi,yi
-                if fingerList[4]==0:
-                    cv2.rectangle(img, (xstart_rect, ystart_rect), (xi,yi), drawColor, 10)
-                    xlast_rect,ylast_rect=xi,yi
-                    isDrawindRectangle=True
-                if fingerList[4]==1 and countRectangle==1:
-                    isDrawindRectangle=False
-                    countRectangle=0
-                    cv2.rectangle(canvasBlack, (xstart_rect, ystart_rect),(xlast_rect,ylast_rect), drawColor, 10)
-                    cv2.rectangle(canvas, (xstart_rect, ystart_rect),(xlast_rect,ylast_rect),drawColor, 10)
-
-
+                cv2.circle(img,(xstart_circle,ystart_circle), int(((xstart_circle - xi) ** 2 + (ystart_circle - yi) ** 2) ** 0.5),drawColor,10)
+                xlast_circle,ylast_circle=xi,yi
+            elif tool == "Rectangle":
+                if countRectangle == 1:
+                    xstart_rect, ystart_rect = xi, yi
+                    countRectangle = 0
+                cv2.rectangle(img, (xstart_rect, ystart_rect),(xi,yi), drawColor, 10)
+                xlast_rect, ylast_rect = xi, yi
 
 
 
