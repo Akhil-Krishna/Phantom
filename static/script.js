@@ -18,9 +18,11 @@ menusBtn.addEventListener("click", function () {
 
 closeBtn.addEventListener("click", function () {
   menus.classList.remove("display");
+  closed=1
 });
 
 function closer(){
     menus.classList.remove("display");
+    closed=1
 }
 
